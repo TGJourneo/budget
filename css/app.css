@@ -252,8 +252,8 @@ body {
   justify-content: space-between;
 }
 .header-btn {
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: var(--tap);
+  padding: 0 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 99px;
@@ -358,8 +358,10 @@ body {
   border: none;
   color: var(--accent);
   font-size: 0.85rem;
-  padding: 6px 0;
   cursor: pointer;
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
 }
 .budget-edit {
   display: flex;
@@ -374,8 +376,8 @@ body {
 .section-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin: 4px 2px 10px;
+  align-items: center;
+  margin: 4px 2px 6px;
 }
 .section-head h2 {
   margin: 0;
@@ -389,6 +391,11 @@ body {
   color: var(--accent);
   font-size: 0.9rem;
   cursor: pointer;
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  margin-right: -6px;
 }
 
 /* =========================== TX LIST ============================ */
@@ -592,7 +599,10 @@ input:focus,
   color: var(--accent);
   font-size: 0.85rem;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 0 6px;
+  min-height: var(--tap);
+  display: inline-flex;
+  align-items: center;
   text-transform: none;
   letter-spacing: 0;
 }
