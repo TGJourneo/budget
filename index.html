@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+  />
+  <title>Budget</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0d1117" />
+
+  <!-- iOS standalone -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Budget" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ============================ HOME ============================ -->
+    <section id="view-home" class="view" data-view="home">
+      <!-- rendered by dashboard.js -->
+    </section>
+
+    <!-- ============================ ADD ============================= -->
+    <section id="view-add" class="view" data-view="add" hidden>
+      <header class="view-header">
+        <h1 id="add-title">Add</h1>
+      </header>
+
+      <form id="add-form" class="add-form" autocomplete="off" novalidate>
+        <input type="hidden" id="edit-id" value="" />
+
+        <div class="type-toggle" role="tablist" aria-label="Transaction type">
+          <button type="button" class="type-btn is-active" data-type="expense" role="tab">
+            Expense
+          </button>
+          <button type="button" class="type-btn" data-type="income" role="tab">
+            Income
+          </button>
+        </div>
+
+        <label class="field amount-field">
+          <span class="field-label">Amount</span>
+          <div class="amount-input">
+            <span class="amount-symbol" id="amount-symbol">£</span>
+            <input
+              id="amount"
+              type="text"
+              inputmode="decimal"
+              enterkeyhint="done"
+              placeholder="0.00"
+              autocomplete="off"
+              required
+            />
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Description</span>
+          <input
+            id="description"
+            type="text"
+            placeholder="e.g. Tesco"
+            enterkeyhint="next"
+            maxlength="80"
+          />
+        </label>
+
+        <div class="field">
+          <span class="field-label">
+            Category
+            <button type="button" id="toggle-add-cat" class="link-btn">+ New</button>
+          </span>
+          <select id="category" class="select"></select>
+
+          <div id="new-cat-row" class="new-cat-row" hidden>
+            <input
+              id="new-cat-name"
+              type="text"
+              placeholder="New category name"
+              maxlength="30"
+            />
+            <button type="button" id="save-cat" class="btn-small">Add</button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Date</span>
+          <input id="date" type="date" />
+        </label>
+
+        <p id="add-error" class="form-error" hidden></p>
+
+        <div class="add-actions">
+          <button type="submit" id="submit-btn" class="btn-primary">Add transaction</button>
+          <button type="button" id="delete-btn" class="btn-danger" hidden>Delete</button>
+          <button type="button" id="cancel-edit" class="btn-ghost" hidden>Cancel edit</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ======================= TRANSACTIONS ======================== -->
+    <section id="view-transactions" class="view" data-view="transactions" hidden>
+      <header class="view-header">
+        <h1>Transactions</h1>
+      </header>
+
+      <div class="filters">
+        <label class="filter">
+          <span>Month</span>
+          <select id="filter-month" class="select"></select>
+        </label>
+        <label class="filter">
+          <span>Type</span>
+          <select id="filter-type" class="select">
+            <option value="all">All</option>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </label>
+        <label class="filter">
+          <span>Category</span>
+          <select id="filter-category" class="select">
+            <option value="all">All</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="tx-summary-line" class="tx-summary-line"></div>
+      <ul id="tx-list" class="tx-list"></ul>
+    </section>
+
+    <!-- ========================== SUMMARY ========================== -->
+    <section id="view-summary" class="view" data-view="summary" hidden>
+      <!-- rendered by summary.js -->
+    </section>
+  </div>
+
+  <!-- ====================== BOTTOM NAV ============================= -->
+  <nav id="bottom-nav" class="bottom-nav" aria-label="Primary">
+    <button class="nav-btn is-active" data-nav="home" aria-label="Home">
+      <span class="nav-icon" aria-hidden="true">⌂</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-btn" data-nav="add" aria-label="Add transaction">
+      <span class="nav-icon" aria-hidden="true">＋</span>
+      <span class="nav-label">Add</span>
+    </button>
+    <button class="nav-btn" data-nav="transactions" aria-label="Transactions">
+      <span class="nav-icon" aria-hidden="true">≣</span>
+      <span class="nav-label">List</span>
+    </button>
+    <button class="nav-btn" data-nav="summary" aria-label="Summary">
+      <span class="nav-icon" aria-hidden="true">◧</span>
+      <span class="nav-label">Summary</span>
+    </button>
+  </nav>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

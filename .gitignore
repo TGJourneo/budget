@@ -1,0 +1,5 @@
+# Editor / agent / OS cruft
+.claude/
+.DS_Store
+Thumbs.db
+*.log
