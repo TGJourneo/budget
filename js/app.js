@@ -9,6 +9,7 @@ import {
 } from './transactions.js';
 import { initDashboard, renderDashboard } from './dashboard.js';
 import { initSummary, renderSummary } from './summary.js';
+import { renderWedding } from './wedding.js';
 import { migrateData, generateDueTransactions } from './storage.js';
 import { $, $$, toast } from './utils.js';
 
@@ -19,6 +20,7 @@ const VIEWS = {
   add: { el: '#view-add', render: null },
   transactions: { el: '#view-transactions', render: renderTransactionsView },
   summary: { el: '#view-summary', render: renderSummary },
+  wedding: { el: '#view-wedding', render: renderWedding },
 };
 
 // Switch to a view. opts.editId (for "add") loads a transaction to edit.

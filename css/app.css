@@ -289,6 +289,16 @@ body {
   flex: none;
   text-align: right;
 }
+
+/* wedding form: category select + "new" button */
+.cat-with-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.cat-with-add .select {
+  flex: 1;
+}
 .account-form .select,
 .account-form input[type="date"] {
   width: 100%;

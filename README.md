@@ -23,7 +23,13 @@ no accounts, no sync, no tracking, no build step, no dependencies.
   spend this month with amber/red warnings.
 - **CSV export** — export all transactions to a CSV (Date, Description,
   Category, Type, Account, Amount) from the Transactions screen. Uses the iOS
-  share sheet (save to Files, email, etc.) or a download on desktop.
+  share sheet (save to Files, email, etc.) or a download on desktop. Handy for
+  pasting into Claude for spending insights without any API key or cost.
+- **Wedding tracker** — a fully separate mini-budget on its own tab, ring-fenced
+  from day-to-day spending. Its own total budget, categories, costs and
+  contributions, with budget progress, a "pot" balance (contributions − costs)
+  and a costs-by-category breakdown. Stored under separate `budget_wedding_*`
+  keys so it never touches the main budget.
 - **Dashboard** — available balance, accounts, this-month income/spend, an
   overall budget bar, per-category budgets, recurring payments, and your 10
   most recent transactions. Updates live.
@@ -80,6 +86,7 @@ Everything lives in your browser's `localStorage` under these keys:
 | `budget_accounts`      | array of `{ name, openingBalance, overdraftLimit }` |
 | `budget_recurring`     | array of recurring templates (freq, next date, etc.) |
 | `budget_category_limits` | `{ categoryName: monthlyLimit }`                   |
+| `budget_wedding_*`     | separate wedding ledger (budget, categories, items)  |
 | `budget_categories`    | `{ expense: [...], income: [...] }`               |
 | `budget_monthly_limit` | total monthly budget (number as string)           |
 | `budget_settings`      | `{ currency, currencySymbol }`                     |
@@ -103,6 +110,7 @@ js/
   categories.js   category selects + colours
   accounts.js     account picker + balance/accounts cards + manager
   recurring.js    recurring payments card + manager
+  wedding.js      self-contained wedding mini-budget (own ledger)
   dashboard.js    home overview + live calculations
   summary.js      monthly breakdown, donut + bars, comparison
 icons/            app icons (192, 512, 180)
