@@ -6,10 +6,15 @@ no accounts, no sync, no tracking, no build step, no dependencies.
 
 ## Features
 
-- **Quick add** — amount (numeric keypad), description, category, type, date.
-  One tap to save; the form resets ready for the next entry.
-- **Dashboard** — income, spend, remaining balance and a budget progress bar
-  for the current month, plus your 10 most recent transactions. Updates live.
+- **Quick add** — amount (numeric keypad), description, category, type, date,
+  account. One tap to save; the form resets ready for the next entry.
+- **Accounts & carry-over** — add multiple accounts (e.g. Current, Savings),
+  each with a starting balance and overdraft limit. The dashboard shows a
+  single **available balance** that carries over across months (opening
+  balances + all income − all expenses) and goes **negative/red** when you're
+  into overdraft, plus a per-account breakdown and "available incl. overdraft".
+- **Dashboard** — available balance, accounts, this-month income/spend, a
+  budget progress bar, and your 10 most recent transactions. Updates live.
 - **Monthly budget** — set a total monthly spend limit (editable inline on the
   dashboard). Bar turns amber over 80% and red over 100%.
 - **Transactions** — full history, filterable by month, type and category.
@@ -57,12 +62,13 @@ root *or* a subpath (e.g. `username.github.io/budget/`).
 
 Everything lives in your browser's `localStorage` under these keys:
 
-| Key                    | Contents                                  |
-| ---------------------- | ----------------------------------------- |
-| `budget_transactions`  | array of transactions                     |
-| `budget_categories`    | `{ expense: [...], income: [...] }`       |
-| `budget_monthly_limit` | total monthly budget (number as string)   |
-| `budget_settings`      | `{ currency, currencySymbol }`            |
+| Key                    | Contents                                          |
+| ---------------------- | ------------------------------------------------- |
+| `budget_transactions`  | array of transactions (each with an `accountId`)  |
+| `budget_accounts`      | array of `{ name, openingBalance, overdraftLimit }` |
+| `budget_categories`    | `{ expense: [...], income: [...] }`               |
+| `budget_monthly_limit` | total monthly budget (number as string)           |
+| `budget_settings`      | `{ currency, currencySymbol }`                     |
 
 Nothing leaves the device. Clearing Safari's site data (or the browser cache)
 will erase your transactions, so this is intended as a personal tool, not a
@@ -81,6 +87,7 @@ js/
   utils.js        formatting, dates, UUID, DOM helpers
   transactions.js add/edit form + filterable list
   categories.js   category selects + colours
+  accounts.js     account picker + balance/accounts cards + manager
   dashboard.js    home overview + live calculations
   summary.js      monthly breakdown, donut + bars, comparison
 icons/            app icons (192, 512, 180)

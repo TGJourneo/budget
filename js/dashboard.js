@@ -5,7 +5,8 @@ import {
   getMonthlyLimit,
   setMonthlyLimit,
 } from './storage.js';
-import { txItem } from './transactions.js';
+import { txItem, accountLabeller } from './transactions.js';
+import { renderBalanceCard, renderAccountsCard } from './accounts.js';
 import {
   $,
   el,
@@ -32,7 +33,6 @@ export function renderDashboard() {
   const txns = getTransactions().filter((t) => isInMonth(t.date, key));
   const income = sum(txns.filter((t) => t.type === 'income'));
   const spent = sum(txns.filter((t) => t.type === 'expense'));
-  const remaining = income - spent;
   const limit = getMonthlyLimit();
 
   // Header.
@@ -43,18 +43,14 @@ export function renderDashboard() {
     ])
   );
 
-  // Remaining balance card.
-  root.appendChild(
-    el('div', { class: 'balance-card' }, [
-      el('div', { class: 'balance-label', text: 'Remaining this month' }),
-      el('div', {
-        class: `balance-value num ${remaining < 0 ? 'expense' : ''}`,
-        text: formatCurrency(remaining),
-      }),
-    ])
-  );
+  // Available balance (carries over across all months) + accounts breakdown.
+  root.appendChild(renderBalanceCard());
+  root.appendChild(renderAccountsCard());
 
-  // Income / spent stats.
+  // This-month income / spent.
+  root.appendChild(
+    el('div', { class: 'section-head' }, [el('h2', { text: monthLabel(key) })])
+  );
   root.appendChild(
     el('div', { class: 'stat-row' }, [
       el('div', { class: 'stat' }, [
@@ -100,7 +96,8 @@ export function renderDashboard() {
       const item = e.target.closest('.tx-item');
       if (item && item.dataset.id) navigate('add', { editId: item.dataset.id });
     });
-    for (const tx of recent) list.appendChild(txItem(tx));
+    const labelOf = accountLabeller();
+    for (const tx of recent) list.appendChild(txItem(tx, labelOf(tx)));
     root.appendChild(list);
   }
 }

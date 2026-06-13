@@ -8,12 +8,14 @@ import {
   deleteTransaction,
   addCategory,
   getSettings,
+  getAccounts,
 } from './storage.js';
 import {
   populateCategorySelect,
   populateFilterCategory,
   categoryColor,
 } from './categories.js';
+import { populateAccountSelect } from './accounts.js';
 import {
   $,
   el,
@@ -33,6 +35,7 @@ import {
 
 let navigate = () => {};
 let currentType = 'expense';
+let lastAccountId = null; // remember the last-used account for fast re-entry
 
 // List filter state (persists while the app is open).
 const filterState = {
@@ -141,6 +144,8 @@ function onSubmit(e) {
   if (!description) description = category; // sensible default for speed
 
   const date = $('#date').value || todayISO();
+  const accountId = $('#account').value || (getAccounts()[0] && getAccounts()[0].id) || null;
+  lastAccountId = accountId;
   const editId = $('#edit-id').value;
 
   if (editId) {
@@ -150,6 +155,7 @@ function onSubmit(e) {
       category,
       date,
       type: currentType,
+      accountId,
     });
     emitChange();
     resetAddForm();
@@ -163,6 +169,7 @@ function onSubmit(e) {
       amount,
       type: currentType,
       category,
+      accountId,
       createdAt: Date.now(),
     });
     emitChange();
@@ -194,6 +201,7 @@ export function resetAddForm() {
   $('#new-cat-row').hidden = true;
   clearError();
   setType('expense');
+  populateAccountSelect($('#account'), lastAccountId || (getAccounts()[0] && getAccounts()[0].id));
   $('#add-title').textContent = 'Add';
   $('#submit-btn').textContent = 'Add transaction';
   $('#delete-btn').hidden = true;
@@ -213,6 +221,7 @@ export function loadTransactionIntoForm(id) {
   $('#description').value = tx.description || '';
   $('#date').value = tx.date;
   populateCategorySelect($('#category'), tx.type, tx.category);
+  populateAccountSelect($('#account'), tx.accountId);
   clearError();
   $('#add-title').textContent = 'Edit';
   $('#submit-btn').textContent = 'Save changes';
@@ -306,22 +315,34 @@ export function renderTransactionsView() {
     list.appendChild(emptyState('No transactions for this filter.'));
     return;
   }
-  for (const tx of rows) list.appendChild(txItem(tx));
+  const labelOf = accountLabeller();
+  for (const tx of rows) list.appendChild(txItem(tx, labelOf(tx)));
 }
 
 // Shared row renderer (also used by the dashboard's recent list).
-export function txItem(tx) {
+// accountName is shown only when the user has more than one account.
+export function txItem(tx, accountName) {
+  let meta = `${formatDate(tx.date)} · ${tx.category}`;
+  if (accountName) meta += ` · ${accountName}`;
   return el('li', { class: 'tx-item', dataset: { id: tx.id } }, [
     el('span', { class: 'tx-cat-dot', style: `background:${categoryColor(tx.category)}` }),
     el('div', { class: 'tx-main' }, [
       el('div', { class: 'tx-desc', text: tx.description || tx.category }),
-      el('div', { class: 'tx-meta', text: `${formatDate(tx.date)} · ${tx.category}` }),
+      el('div', { class: 'tx-meta', text: meta }),
     ]),
     el('div', {
       class: `tx-amount num ${tx.type === 'income' ? 'income' : 'expense'}`,
       text: formatSigned(tx.amount, tx.type),
     }),
   ]);
+}
+
+// Build an id -> name map and a flag for whether to show account in rows.
+export function accountLabeller() {
+  const accounts = getAccounts();
+  const byId = new Map(accounts.map((a) => [a.id, a.name]));
+  const show = accounts.length > 1;
+  return (tx) => (show ? byId.get(tx.accountId) || '' : '');
 }
 
 function emptyState(message) {

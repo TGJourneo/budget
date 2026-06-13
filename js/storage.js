@@ -6,6 +6,7 @@ export const KEYS = {
   categories: 'budget_categories',
   monthlyLimit: 'budget_monthly_limit',
   settings: 'budget_settings',
+  accounts: 'budget_accounts',
 };
 
 export const DEFAULT_CATEGORIES = {
@@ -180,6 +181,140 @@ export function getSettings() {
 
 export function saveSettings(settings) {
   return writeJSON(KEYS.settings, settings);
+}
+
+// --- accounts ----------------------------------------------------------
+
+function genId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'a-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
+
+export function getAccounts() {
+  const data = readJSON(KEYS.accounts, []);
+  if (!Array.isArray(data)) return [];
+  return data
+    .filter((a) => a && typeof a.id === 'string' && typeof a.name === 'string')
+    .map((a) => ({
+      id: a.id,
+      name: a.name,
+      openingBalance: isFinite(Number(a.openingBalance)) ? Number(a.openingBalance) : 0,
+      overdraftLimit: isFinite(Number(a.overdraftLimit)) && Number(a.overdraftLimit) >= 0
+        ? Number(a.overdraftLimit)
+        : 0,
+      createdAt: a.createdAt || 0,
+    }));
+}
+
+export function saveAccounts(list) {
+  return writeJSON(KEYS.accounts, list);
+}
+
+export function addAccount({ name, openingBalance = 0, overdraftLimit = 0 }) {
+  const trimmed = String(name || '').trim();
+  if (!trimmed) return null;
+  const list = getAccounts();
+  const account = {
+    id: genId(),
+    name: trimmed,
+    openingBalance: Number(openingBalance) || 0,
+    overdraftLimit: Math.max(0, Number(overdraftLimit) || 0),
+    createdAt: Date.now(),
+  };
+  list.push(account);
+  saveAccounts(list);
+  return account;
+}
+
+export function updateAccount(id, patch) {
+  const list = getAccounts();
+  const idx = list.findIndex((a) => a.id === id);
+  if (idx === -1) return null;
+  const next = { ...list[idx], ...patch, id };
+  next.name = String(next.name || '').trim() || list[idx].name;
+  next.openingBalance = Number(next.openingBalance) || 0;
+  next.overdraftLimit = Math.max(0, Number(next.overdraftLimit) || 0);
+  list[idx] = next;
+  saveAccounts(list);
+  return next;
+}
+
+// Delete an account. Its transactions are reassigned to another account so no
+// money silently vanishes. The last remaining account cannot be deleted.
+export function deleteAccount(id) {
+  const list = getAccounts();
+  if (list.length <= 1) return false;
+  const remaining = list.filter((a) => a.id !== id);
+  if (remaining.length === list.length) return false;
+  const fallbackId = remaining[0].id;
+  const txns = getTransactions();
+  let changed = false;
+  for (const t of txns) {
+    if (t.accountId === id) {
+      t.accountId = fallbackId;
+      changed = true;
+    }
+  }
+  if (changed) saveTransactions(txns);
+  saveAccounts(remaining);
+  return true;
+}
+
+// Accounts with their live balances derived from opening balance + transactions.
+export function getAccountsWithBalances() {
+  const accounts = getAccounts();
+  const txns = getTransactions();
+  return accounts.map((a) => {
+    let balance = Number(a.openingBalance) || 0;
+    for (const t of txns) {
+      if (t.accountId !== a.id) continue;
+      balance += t.type === 'income' ? Number(t.amount) : -Number(t.amount);
+    }
+    const overdraftLimit = Number(a.overdraftLimit) || 0;
+    return {
+      ...a,
+      balance,
+      available: balance + overdraftLimit,
+      overdraftUsed: balance < 0 ? Math.min(-balance, overdraftLimit) : 0,
+    };
+  });
+}
+
+// Whole-picture totals across every account (carry over across months).
+export function getTotals() {
+  const accounts = getAccountsWithBalances();
+  const balance = accounts.reduce((s, a) => s + a.balance, 0);
+  const overdraftLimit = accounts.reduce((s, a) => s + (Number(a.overdraftLimit) || 0), 0);
+  return { balance, overdraftLimit, available: balance + overdraftLimit, accounts };
+}
+
+// Ensure at least one account exists so the Add form always has a target.
+export function ensureDefaultAccount() {
+  let list = getAccounts();
+  if (list.length === 0) {
+    addAccount({ name: 'Current', openingBalance: 0, overdraftLimit: 0 });
+    list = getAccounts();
+  }
+  return list;
+}
+
+// One-time/idempotent migration: guarantee a default account and attach any
+// transaction that has no (or a dangling) accountId to it.
+export function migrateData() {
+  const accounts = ensureDefaultAccount();
+  const validIds = new Set(accounts.map((a) => a.id));
+  const defaultId = accounts[0].id;
+  const txns = getTransactions();
+  let changed = false;
+  for (const t of txns) {
+    if (!t.accountId || !validIds.has(t.accountId)) {
+      t.accountId = defaultId;
+      changed = true;
+    }
+  }
+  if (changed) saveTransactions(txns);
 }
 
 // --- data management (used by settings view) ---------------------------

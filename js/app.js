@@ -9,6 +9,7 @@ import {
 } from './transactions.js';
 import { initDashboard, renderDashboard } from './dashboard.js';
 import { initSummary, renderSummary } from './summary.js';
+import { migrateData } from './storage.js';
 import { $, $$ } from './utils.js';
 
 let currentView = 'home';
@@ -73,6 +74,7 @@ function registerServiceWorker() {
 }
 
 function init() {
+  migrateData(); // ensure a default account + attach legacy transactions
   initDashboard({ navigate });
   initSummary({ navigate });
   initTransactions({ navigate });

@@ -150,6 +150,96 @@ body {
   margin-top: 4px;
 }
 
+.balance-sub {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+/* accounts */
+.accounts-card {
+  margin-bottom: 22px;
+}
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  min-height: var(--tap);
+}
+.account-left {
+  min-width: 0;
+}
+.account-name {
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+.account-meta {
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+.account-right {
+  text-align: right;
+  flex: none;
+}
+.account-balance {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.account-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.link-btn.danger {
+  color: var(--expense);
+}
+.add-account-btn {
+  width: 100%;
+  min-height: var(--tap);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.account-form-hint {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.mini-label {
+  font-size: 0.74rem;
+  margin-top: 2px;
+}
+.account-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.account-form-actions .btn-small,
+.account-form-actions .btn-ghost {
+  flex: 1;
+  padding: 10px;
+}
+
 /* budget progress */
 .budget-card {
   background: var(--surface);
