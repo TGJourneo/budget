@@ -31,6 +31,8 @@ import {
   monthKeysFromTransactions,
   emitChange,
   toast,
+  downloadFile,
+  csvCell,
 } from './utils.js';
 
 let navigate = () => {};
@@ -58,8 +60,34 @@ export function initTransactions(deps = {}) {
   wireForm();
   wireListFilters();
   wireListDelegation();
+  $('#export-csv').addEventListener('click', exportCSV);
 
   resetAddForm();
+}
+
+// Export all transactions as a CSV file (newest data is fine to sort ascending
+// for spreadsheets). Uses the native share sheet on iOS, download elsewhere.
+async function exportCSV() {
+  const txns = getTransactions()
+    .slice()
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (a.createdAt || 0) - (b.createdAt || 0)));
+  if (txns.length === 0) {
+    toast('No transactions to export');
+    return;
+  }
+  const accountsById = new Map(getAccounts().map((a) => [a.id, a.name]));
+  const header = ['Date', 'Description', 'Category', 'Type', 'Account', 'Amount'];
+  const lines = [header.map(csvCell).join(',')];
+  for (const t of txns) {
+    const signed = (t.type === 'expense' ? '-' : '') + Number(t.amount).toFixed(2);
+    lines.push(
+      [t.date, t.description || '', t.category || '', t.type, accountsById.get(t.accountId) || '', signed]
+        .map(csvCell)
+        .join(',')
+    );
+  }
+  const csv = lines.join('\r\n');
+  await downloadFile(`budget-${todayISO()}.csv`, csv, 'text/csv');
 }
 
 // ------------------------------------------------------------ add form

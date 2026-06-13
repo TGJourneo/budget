@@ -10,6 +10,7 @@ export const KEYS = {
   settings: 'budget_settings',
   accounts: 'budget_accounts',
   recurring: 'budget_recurring',
+  categoryLimits: 'budget_category_limits',
 };
 
 export const DEFAULT_CATEGORIES = {
@@ -318,6 +319,35 @@ export function migrateData() {
     }
   }
   if (changed) saveTransactions(txns);
+}
+
+// --- per-category budget limits ---------------------------------------
+
+// Returns an object of { categoryName: monthlyLimit }. Only positive limits
+// are kept; everything else falls back to "no limit".
+export function getCategoryLimits() {
+  const data = readJSON(KEYS.categoryLimits, {});
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return {};
+  const out = {};
+  for (const [cat, val] of Object.entries(data)) {
+    const n = Number(val);
+    if (isFinite(n) && n > 0) out[cat] = n;
+  }
+  return out;
+}
+
+export function saveCategoryLimits(limits) {
+  return writeJSON(KEYS.categoryLimits, limits);
+}
+
+// Set (or, with 0/blank, clear) the monthly limit for one category.
+export function setCategoryLimit(category, amount) {
+  const limits = getCategoryLimits();
+  const n = Number(amount);
+  if (!isFinite(n) || n <= 0) delete limits[category];
+  else limits[category] = n;
+  saveCategoryLimits(limits);
+  return limits;
 }
 
 // --- recurring transactions -------------------------------------------

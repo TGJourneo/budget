@@ -244,6 +244,51 @@ body {
   padding: 4px 2px 8px;
   line-height: 1.4;
 }
+
+/* header with a right-aligned action button */
+.view-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* per-category budgets */
+.cat-budget-row {
+  margin-bottom: 12px;
+}
+.cat-budget-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.92rem;
+  margin-bottom: 5px;
+}
+.cat-budget-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.cat-budget-edit-row .cat-name {
+  flex: 1;
+  min-width: 0;
+}
+.cat-budget-edit-row input {
+  width: 110px;
+  flex: none;
+  text-align: right;
+}
 .account-form .select,
 .account-form input[type="date"] {
   width: 100%;

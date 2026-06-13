@@ -4,7 +4,11 @@ import {
   getTransactions,
   getMonthlyLimit,
   setMonthlyLimit,
+  getCategories,
+  getCategoryLimits,
+  setCategoryLimit,
 } from './storage.js';
+import { categoryColor } from './categories.js';
 import { txItem, accountLabeller } from './transactions.js';
 import { renderBalanceCard, renderAccountsCard } from './accounts.js';
 import { renderRecurringCard } from './recurring.js';
@@ -21,6 +25,7 @@ import {
 
 let navigate = () => {};
 let editingBudget = false;
+let catBudgetOpen = false;
 
 export function initDashboard(deps = {}) {
   if (deps.navigate) navigate = deps.navigate;
@@ -67,6 +72,9 @@ export function renderDashboard() {
 
   // Budget card.
   root.appendChild(budgetCard(spent, limit));
+
+  // Per-category budgets.
+  root.appendChild(categoryBudgetsCard(txns));
 
   // Recurring payments.
   root.appendChild(renderRecurringCard());
@@ -212,6 +220,100 @@ function budgetCard(spent, limit) {
     );
   }
 
+  return card;
+}
+
+// Per-category monthly budgets: set limits and track this month's spend.
+function categoryBudgetsCard(monthTxns) {
+  const card = el('div', { class: 'accounts-card' });
+  const limits = getCategoryLimits();
+
+  // This month's spend per expense category.
+  const spentByCat = {};
+  for (const t of monthTxns) {
+    if (t.type !== 'expense') continue;
+    spentByCat[t.category] = (spentByCat[t.category] || 0) + Number(t.amount || 0);
+  }
+
+  card.appendChild(
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Category budgets' }),
+      el('button', {
+        type: 'button',
+        text: catBudgetOpen ? 'Done' : 'Manage',
+        onClick: () => {
+          catBudgetOpen = !catBudgetOpen;
+          emitChange();
+        },
+      }),
+    ])
+  );
+
+  if (catBudgetOpen) {
+    // Editable list of every expense category.
+    const cats = getCategories().expense;
+    for (const cat of cats) {
+      const input = el('input', {
+        type: 'text',
+        inputmode: 'decimal',
+        placeholder: 'No limit',
+        value: limits[cat] ? String(limits[cat]) : '',
+      });
+      // Save quietly on change so typing isn't interrupted by a re-render.
+      input.addEventListener('change', () => setCategoryLimit(cat, input.value));
+      card.appendChild(
+        el('div', { class: 'cat-budget-edit-row' }, [
+          el('span', { class: 'cat-name' }, [
+            el('span', { class: 'tx-cat-dot', style: `background:${categoryColor(cat)}` }),
+            el('span', { text: cat }),
+          ]),
+          input,
+        ])
+      );
+    }
+    card.appendChild(
+      el('div', { class: 'recurring-empty dim', text: 'Leave blank for no limit. Spend is tracked per calendar month.' })
+    );
+    return card;
+  }
+
+  // Read-only: show only categories that have a limit, with usage bars.
+  const tracked = Object.keys(limits).sort((a, b) => a.localeCompare(b));
+  if (tracked.length === 0) {
+    card.appendChild(
+      el('div', { class: 'recurring-empty dim', text: 'No category limits set. Tap Manage to cap spending per category (e.g. Food £400).' })
+    );
+    return card;
+  }
+
+  for (const cat of tracked) {
+    const spentCat = spentByCat[cat] || 0;
+    const lim = limits[cat];
+    const pct = lim > 0 ? (spentCat / lim) * 100 : 0;
+    const over = pct > 100;
+    const warn = pct > 80 && pct <= 100;
+    card.appendChild(
+      el('div', { class: 'cat-budget-row' }, [
+        el('div', { class: 'cat-budget-top' }, [
+          el('span', { class: 'cat-name' }, [
+            el('span', { class: 'tx-cat-dot', style: `background:${categoryColor(cat)}` }),
+            el('span', { text: cat }),
+          ]),
+          el('span', {
+            class: 'num',
+            style: over ? 'color:var(--red);font-weight:600' : warn ? 'color:var(--amber);font-weight:600' : '',
+            text: `${formatCurrency(spentCat)} / ${formatCurrency(lim)}`,
+          }),
+        ]),
+        el('div', { class: 'progress', style: 'height:8px' }, [
+          el('div', {
+            class: `progress-bar ${over ? 'over' : warn ? 'warn' : ''}`,
+            style: `width:${Math.min(pct, 100)}%`,
+          }),
+        ]),
+      ])
+    );
+  }
   return card;
 }
 

@@ -18,9 +18,15 @@ no accounts, no sync, no tracking, no build step, no dependencies.
   app automatically creates any that have come due since you last opened it
   (catching up missed months) and tells you what it added. Each generated entry
   is a normal, editable transaction.
-- **Dashboard** — available balance, accounts, this-month income/spend, a
-  budget progress bar, recurring payments, and your 10 most recent
-  transactions. Updates live.
+- **Per-category budgets** — cap spending per category (e.g. Food £400) on top
+  of the overall monthly budget. The dashboard tracks each capped category's
+  spend this month with amber/red warnings.
+- **CSV export** — export all transactions to a CSV (Date, Description,
+  Category, Type, Account, Amount) from the Transactions screen. Uses the iOS
+  share sheet (save to Files, email, etc.) or a download on desktop.
+- **Dashboard** — available balance, accounts, this-month income/spend, an
+  overall budget bar, per-category budgets, recurring payments, and your 10
+  most recent transactions. Updates live.
 - **Monthly budget** — set a total monthly spend limit (editable inline on the
   dashboard). Bar turns amber over 80% and red over 100%.
 - **Transactions** — full history, filterable by month, type and category.
@@ -73,6 +79,7 @@ Everything lives in your browser's `localStorage` under these keys:
 | `budget_transactions`  | array of transactions (each with an `accountId`)  |
 | `budget_accounts`      | array of `{ name, openingBalance, overdraftLimit }` |
 | `budget_recurring`     | array of recurring templates (freq, next date, etc.) |
+| `budget_category_limits` | `{ categoryName: monthlyLimit }`                   |
 | `budget_categories`    | `{ expense: [...], income: [...] }`               |
 | `budget_monthly_limit` | total monthly budget (number as string)           |
 | `budget_settings`      | `{ currency, currencySymbol }`                     |

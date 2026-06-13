@@ -215,6 +215,40 @@ export function toast(message) {
   _toastTimer = setTimeout(() => node.classList.remove('show'), 1600);
 }
 
+// Offer a text file to the user. Prefers the native share sheet (best on
+// iOS, including installed PWAs) and falls back to a normal download link.
+// Must be called from within a user gesture (e.g. a click handler).
+export async function downloadFile(filename, text, mime = 'text/plain') {
+  const blob = new Blob([text], { type: mime });
+  try {
+    if (navigator.canShare) {
+      const file = new File([blob], filename, { type: mime });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // user cancelled the share sheet
+    // otherwise fall through to the download link
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Escape one value for CSV (RFC 4180): quote if it contains a comma, quote or
+// newline, and double any embedded quotes.
+export function csvCell(value) {
+  const s = value == null ? '' : String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
 // Parse a user-entered amount string into a positive number, or null.
 export function parseAmount(value) {
   if (value == null) return null;
