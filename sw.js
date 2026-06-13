@@ -1,7 +1,7 @@
 // sw.js -- service worker: cache all static assets, serve cache-first.
 // Bump CACHE_VERSION whenever any cached asset changes.
 
-const CACHE_VERSION = 'budget-v2';
+const CACHE_VERSION = 'budget-v3';
 
 // Relative paths so the app works at the site root *or* a subpath.
 const ASSETS = [
@@ -15,6 +15,7 @@ const ASSETS = [
   './js/transactions.js',
   './js/categories.js',
   './js/accounts.js',
+  './js/recurring.js',
   './js/dashboard.js',
   './js/summary.js',
   './icons/icon-192.png',

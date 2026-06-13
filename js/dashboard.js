@@ -7,6 +7,7 @@ import {
 } from './storage.js';
 import { txItem, accountLabeller } from './transactions.js';
 import { renderBalanceCard, renderAccountsCard } from './accounts.js';
+import { renderRecurringCard } from './recurring.js';
 import {
   $,
   el,
@@ -66,6 +67,9 @@ export function renderDashboard() {
 
   // Budget card.
   root.appendChild(budgetCard(spent, limit));
+
+  // Recurring payments.
+  root.appendChild(renderRecurringCard());
 
   // Recent transactions.
   root.appendChild(

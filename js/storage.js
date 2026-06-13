@@ -1,12 +1,15 @@
 // storage.js -- all localStorage read/write. Every read is defensive:
 // missing or corrupt data falls back to sensible defaults.
 
+import { todayISO, addMonths, addDays } from './utils.js';
+
 export const KEYS = {
   transactions: 'budget_transactions',
   categories: 'budget_categories',
   monthlyLimit: 'budget_monthly_limit',
   settings: 'budget_settings',
   accounts: 'budget_accounts',
+  recurring: 'budget_recurring',
 };
 
 export const DEFAULT_CATEGORIES = {
@@ -315,6 +318,133 @@ export function migrateData() {
     }
   }
   if (changed) saveTransactions(txns);
+}
+
+// --- recurring transactions -------------------------------------------
+
+export function getRecurring() {
+  const data = readJSON(KEYS.recurring, []);
+  if (!Array.isArray(data)) return [];
+  return data
+    .filter(
+      (r) =>
+        r &&
+        typeof r.id === 'string' &&
+        (r.type === 'income' || r.type === 'expense') &&
+        isFinite(Number(r.amount)) &&
+        typeof r.startDate === 'string'
+    )
+    .map((r) => ({
+      id: r.id,
+      description: typeof r.description === 'string' ? r.description : '',
+      amount: Number(r.amount),
+      type: r.type,
+      category: typeof r.category === 'string' ? r.category : 'Other',
+      accountId: typeof r.accountId === 'string' ? r.accountId : null,
+      frequency: r.frequency === 'weekly' ? 'weekly' : 'monthly',
+      startDate: r.startDate,
+      count: Number.isInteger(r.count) && r.count >= 0 ? r.count : 0,
+      active: r.active !== false,
+      createdAt: r.createdAt || 0,
+    }));
+}
+
+export function saveRecurring(list) {
+  return writeJSON(KEYS.recurring, list);
+}
+
+export function addRecurring(template) {
+  const list = getRecurring();
+  const rec = {
+    id: genId(),
+    description: String(template.description || '').trim(),
+    amount: Math.abs(Number(template.amount) || 0),
+    type: template.type === 'income' ? 'income' : 'expense',
+    category: template.category || 'Other',
+    accountId: template.accountId || null,
+    frequency: template.frequency === 'weekly' ? 'weekly' : 'monthly',
+    startDate: template.startDate || todayISO(),
+    count: 0,
+    active: true,
+    createdAt: Date.now(),
+  };
+  list.push(rec);
+  saveRecurring(list);
+  return rec;
+}
+
+export function updateRecurring(id, patch) {
+  const list = getRecurring();
+  const idx = list.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  const next = { ...list[idx], ...patch, id };
+  next.amount = Math.abs(Number(next.amount) || 0);
+  next.description = String(next.description || '').trim();
+  // Editing the schedule (date/frequency) re-anchors future generation.
+  if (patch.startDate || patch.frequency) next.count = 0;
+  list[idx] = next;
+  saveRecurring(list);
+  return next;
+}
+
+export function deleteRecurring(id) {
+  const list = getRecurring();
+  const next = list.filter((r) => r.id !== id);
+  saveRecurring(next);
+  return next.length !== list.length;
+}
+
+// The date of the next not-yet-generated occurrence for a template.
+export function nextDueDate(template) {
+  return occurrenceDate(template.startDate, template.frequency, template.count || 0);
+}
+
+function occurrenceDate(startDate, frequency, index) {
+  if (!startDate) return null;
+  return frequency === 'weekly'
+    ? addDays(startDate, 7 * index)
+    : addMonths(startDate, index);
+}
+
+// Create any recurring transactions that have come due up to today (catch-up
+// for missed app opens). Returns how many were created.
+export function generateDueTransactions() {
+  const templates = getRecurring();
+  if (templates.length === 0) return 0;
+  const today = todayISO();
+  const validAccountIds = new Set(getAccounts().map((a) => a.id));
+  const fallbackAccount = getAccounts()[0] ? getAccounts()[0].id : null;
+  let created = 0;
+  let changed = false;
+
+  for (const t of templates) {
+    if (!t.active) continue;
+    let count = t.count || 0;
+    let occ = occurrenceDate(t.startDate, t.frequency, count);
+    let guard = 0;
+    while (occ && occ <= today && guard < 1000) {
+      const accountId = validAccountIds.has(t.accountId) ? t.accountId : fallbackAccount;
+      addTransaction({
+        id: genId(),
+        date: occ,
+        description: t.description || t.category,
+        amount: t.amount,
+        type: t.type,
+        category: t.category,
+        accountId,
+        recurringId: t.id,
+        createdAt: Date.now(),
+      });
+      created++;
+      count++;
+      changed = true;
+      occ = occurrenceDate(t.startDate, t.frequency, count);
+      guard++;
+    }
+    t.count = count;
+  }
+  if (changed) saveRecurring(templates);
+  return created;
 }
 
 // --- data management (used by settings view) ---------------------------

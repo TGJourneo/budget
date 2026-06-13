@@ -84,6 +84,24 @@ export function toISO(date) {
   return `${y}-${m}-${d}`;
 }
 
+// Add n months to an ISO date, clamping the day to the target month's length
+// (e.g. 31 Jan + 1 month -> 28/29 Feb). Computed from the original date to
+// avoid drift when stepping repeatedly.
+export function addMonths(iso, n) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1 + n, 1);
+  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  date.setDate(Math.min(d, lastDay));
+  return toISO(date);
+}
+
+// Add n days to an ISO date.
+export function addDays(iso, n) {
+  const date = parseISO(iso);
+  date.setDate(date.getDate() + n);
+  return toISO(date);
+}
+
 // Display an ISO date as "13 Jun 2026".
 export function formatDate(iso) {
   const date = parseISO(iso);

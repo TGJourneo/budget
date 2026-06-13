@@ -9,8 +9,8 @@ import {
 } from './transactions.js';
 import { initDashboard, renderDashboard } from './dashboard.js';
 import { initSummary, renderSummary } from './summary.js';
-import { migrateData } from './storage.js';
-import { $, $$ } from './utils.js';
+import { migrateData, generateDueTransactions } from './storage.js';
+import { $, $$, toast } from './utils.js';
 
 let currentView = 'home';
 
@@ -75,6 +75,7 @@ function registerServiceWorker() {
 
 function init() {
   migrateData(); // ensure a default account + attach legacy transactions
+  const generated = generateDueTransactions(); // catch up recurring payments
   initDashboard({ navigate });
   initSummary({ navigate });
   initTransactions({ navigate });
@@ -82,6 +83,9 @@ function init() {
   wireLiveUpdates();
   registerServiceWorker();
   navigate('home');
+  if (generated > 0) {
+    toast(`Added ${generated} recurring ${generated === 1 ? 'payment' : 'payments'}`);
+  }
 }
 
 init();
