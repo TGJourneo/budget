@@ -11,7 +11,10 @@ export const KEYS = {
   accounts: 'budget_accounts',
   recurring: 'budget_recurring',
   categoryLimits: 'budget_category_limits',
+  goals: 'budget_goals',
 };
+
+export const ACCOUNT_TYPES = ['current', 'savings', 'credit_card'];
 
 export const DEFAULT_CATEGORIES = {
   expense: [
@@ -204,6 +207,7 @@ export function getAccounts() {
     .map((a) => ({
       id: a.id,
       name: a.name,
+      type: ACCOUNT_TYPES.includes(a.type) ? a.type : 'current',
       openingBalance: isFinite(Number(a.openingBalance)) ? Number(a.openingBalance) : 0,
       overdraftLimit: isFinite(Number(a.overdraftLimit)) && Number(a.overdraftLimit) >= 0
         ? Number(a.overdraftLimit)
@@ -216,13 +220,14 @@ export function saveAccounts(list) {
   return writeJSON(KEYS.accounts, list);
 }
 
-export function addAccount({ name, openingBalance = 0, overdraftLimit = 0 }) {
+export function addAccount({ name, type = 'current', openingBalance = 0, overdraftLimit = 0 }) {
   const trimmed = String(name || '').trim();
   if (!trimmed) return null;
   const list = getAccounts();
   const account = {
     id: genId(),
     name: trimmed,
+    type: ACCOUNT_TYPES.includes(type) ? type : 'current',
     openingBalance: Number(openingBalance) || 0,
     overdraftLimit: Math.max(0, Number(overdraftLimit) || 0),
     createdAt: Date.now(),
@@ -238,6 +243,7 @@ export function updateAccount(id, patch) {
   if (idx === -1) return null;
   const next = { ...list[idx], ...patch, id };
   next.name = String(next.name || '').trim() || list[idx].name;
+  next.type = ACCOUNT_TYPES.includes(next.type) ? next.type : 'current';
   next.openingBalance = Number(next.openingBalance) || 0;
   next.overdraftLimit = Math.max(0, Number(next.overdraftLimit) || 0);
   list[idx] = next;
@@ -348,6 +354,68 @@ export function setCategoryLimit(category, amount) {
   else limits[category] = n;
   saveCategoryLimits(limits);
   return limits;
+}
+
+// --- savings goals -----------------------------------------------------
+
+// A goal: { id, name, source, target, targetDate, monthly, createdAt }
+//   source = "account:<id>"  -> progress tracked from that account's balance
+//          | "wedding"        -> progress tracked from the wedding pot
+//   monthly = amount set aside each month (subtracted by the margin finder)
+export function getGoals() {
+  const data = readJSON(KEYS.goals, []);
+  if (!Array.isArray(data)) return [];
+  return data
+    .filter((g) => g && typeof g.id === 'string' && typeof g.source === 'string')
+    .map((g) => ({
+      id: g.id,
+      name: typeof g.name === 'string' && g.name.trim() ? g.name : 'Goal',
+      source: g.source,
+      target: Math.max(0, Number(g.target) || 0),
+      targetDate: typeof g.targetDate === 'string' ? g.targetDate : '',
+      monthly: Math.max(0, Number(g.monthly) || 0),
+      createdAt: g.createdAt || 0,
+    }));
+}
+
+export function saveGoals(list) {
+  return writeJSON(KEYS.goals, list);
+}
+
+export function addGoal(goal) {
+  const list = getGoals();
+  const g = {
+    id: genId(),
+    name: String(goal.name || '').trim() || 'Goal',
+    source: goal.source || 'wedding',
+    target: Math.max(0, Number(goal.target) || 0),
+    targetDate: goal.targetDate || '',
+    monthly: Math.max(0, Number(goal.monthly) || 0),
+    createdAt: Date.now(),
+  };
+  list.push(g);
+  saveGoals(list);
+  return g;
+}
+
+export function updateGoal(id, patch) {
+  const list = getGoals();
+  const idx = list.findIndex((g) => g.id === id);
+  if (idx === -1) return null;
+  const next = { ...list[idx], ...patch, id };
+  next.name = String(next.name || '').trim() || 'Goal';
+  next.target = Math.max(0, Number(next.target) || 0);
+  next.monthly = Math.max(0, Number(next.monthly) || 0);
+  list[idx] = next;
+  saveGoals(list);
+  return next;
+}
+
+export function deleteGoal(id) {
+  const list = getGoals();
+  const next = list.filter((g) => g.id !== id);
+  saveGoals(next);
+  return next.length !== list.length;
 }
 
 // --- recurring transactions -------------------------------------------

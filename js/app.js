@@ -11,6 +11,7 @@ import { initDashboard, renderDashboard } from './dashboard.js';
 import { initSummary, renderSummary } from './summary.js';
 import { renderWedding } from './wedding.js';
 import { initScan, renderScan, resetScan } from './import-scan.js';
+import { initInsights } from './insights.js';
 import { migrateData, generateDueTransactions } from './storage.js';
 import { $, $$, toast } from './utils.js';
 
@@ -87,6 +88,7 @@ function init() {
   initSummary({ navigate });
   initTransactions({ navigate });
   initScan({ navigate });
+  initInsights({ navigate });
   const scanBtn = $('#scan-btn');
   if (scanBtn) scanBtn.addEventListener('click', () => navigate('scan'));
   wireNav();

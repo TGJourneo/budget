@@ -2,6 +2,7 @@
 
 import { getTransactions } from './storage.js';
 import { categoryColor } from './categories.js';
+import { biggestMovers } from './patterns.js';
 import {
   $,
   el,
@@ -76,8 +77,43 @@ export function renderSummary() {
     root.appendChild(catBars(byCat, expense));
   }
 
+  // 6-month category trends + biggest movers.
+  const trends = trendsCard(all);
+  if (trends) root.appendChild(trends);
+
   // Month-on-month comparison.
   root.appendChild(momCard(all));
+}
+
+// Biggest movers vs last month, each with a 6-month mini bar trend.
+function trendsCard(all) {
+  const movers = biggestMovers(all, 5);
+  if (!movers.length) return null;
+  const card = el('div', { class: 'mom-card' });
+  card.appendChild(el('div', { class: 'section-head' }, [el('h2', { text: 'Trends (6 months)' })]));
+  for (const m of movers) {
+    const color = categoryColor(m.category);
+    const max = Math.max(...m.totals, 1);
+    const bars = el('div', { class: 'spark' }, m.totals.map((v) =>
+      el('div', { class: 'spark-bar', style: `height:${Math.max(3, Math.round((v / max) * 28))}px;background:${color}` })
+    ));
+    const up = m.pctVsPrev > 0;
+    const deltaText = m.pctVsPrev === null ? 'new' : `${up ? '▲' : m.pctVsPrev < 0 ? '▼' : ''} ${Math.abs(m.pctVsPrev)}%`;
+    card.appendChild(
+      el('div', { class: 'trend-row' }, [
+        el('div', { class: 'trend-head' }, [
+          el('span', { class: 'cat-name' }, [
+            el('span', { class: 'tx-cat-dot', style: `background:${color}` }),
+            el('span', { text: m.category }),
+          ]),
+          el('span', { class: `mom-delta ${up ? 'expense' : 'income'}`, text: deltaText }),
+        ]),
+        bars,
+      ])
+    );
+  }
+  card.appendChild(el('div', { class: 'dim', style: 'font-size:0.78rem;margin-top:4px', text: 'Bars show monthly spend over the last 6 months (oldest → newest).' }));
+  return card;
 }
 
 // --- donut (SVG built from numbers/palette only; no user text inside) ---

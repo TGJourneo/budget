@@ -12,6 +12,9 @@ import { categoryColor } from './categories.js';
 import { txItem, accountLabeller } from './transactions.js';
 import { renderBalanceCard, renderAccountsCard } from './accounts.js';
 import { renderRecurringCard } from './recurring.js';
+import { renderGoalsCard } from './goals.js';
+import { renderInsightsCard } from './insights.js';
+import { marginFinder, cashFlowRemaining } from './patterns.js';
 import {
   $,
   el,
@@ -73,11 +76,25 @@ export function renderDashboard() {
   // Budget card.
   root.appendChild(budgetCard(spent, limit));
 
+  // Unallocated / margin finder.
+  const marginEl = marginCard();
+  if (marginEl) root.appendChild(marginEl);
+
   // Per-category budgets.
   root.appendChild(categoryBudgetsCard(txns));
 
-  // Recurring payments.
+  // Savings goals.
+  root.appendChild(renderGoalsCard());
+
+  // Heads-up: recurring bills not yet logged this month.
+  const heads = headsUpCard();
+  if (heads) root.appendChild(heads);
+
+  // Recurring payment templates.
   root.appendChild(renderRecurringCard());
+
+  // AI insights.
+  root.appendChild(renderInsightsCard());
 
   // Recent transactions.
   root.appendChild(
@@ -315,6 +332,53 @@ function categoryBudgetsCard(monthTxns) {
     );
   }
   return card;
+}
+
+// Unallocated this month = budget - spent - goal earmarks.
+function marginCard() {
+  const m = marginFinder();
+  if (m.budget <= 0 && m.earmarks <= 0) return null;
+  const neg = m.margin < 0;
+  return el('div', { class: 'margin-card' }, [
+    el('div', {}, [
+      el('div', { class: `margin-value num ${neg ? 'expense' : 'income'}`, text: formatCurrency(m.margin) }),
+      el('div', { class: 'dim', style: 'font-size:0.82rem', text: neg ? 'over-allocated this month' : 'unallocated this month' }),
+    ]),
+    el('div', { class: 'dim', style: 'font-size:0.78rem;text-align:right', text: `${formatCurrency(m.budget)} budget − ${formatCurrency(m.spent)} spent${m.earmarks > 0 ? ' − ' + formatCurrency(m.earmarks) + ' saved' : ''}` }),
+  ]);
+}
+
+// Detected recurring bills that haven't been logged yet this month.
+function headsUpCard() {
+  const flow = cashFlowRemaining();
+  if (!flow.items.length) return null;
+  const card = el('div', { class: 'accounts-card' });
+  card.appendChild(el('div', { class: 'section-head' }, [el('h2', { text: 'Heads up' })]));
+  for (const p of flow.items.slice(0, 5)) {
+    card.appendChild(
+      el('div', { class: 'account-row' }, [
+        el('div', { class: 'account-left' }, [
+          el('div', { class: 'account-name', text: p.description }),
+          el('div', { class: 'account-meta dim', text: `usually around the ${ordinal(p.typicalDay)} · not logged yet` }),
+        ]),
+        el('div', { class: 'account-right' }, [
+          el('div', { class: 'account-balance num expense', text: formatCurrency(p.typicalAmount) }),
+        ]),
+      ])
+    );
+  }
+  card.appendChild(
+    el('div', { class: 'budget-foot' }, [
+      el('span', { class: 'dim', text: `~${formatCurrency(flow.total)} of known bills still to come this month` }),
+    ])
+  );
+  return card;
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 function sum(list) {

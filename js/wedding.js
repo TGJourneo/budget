@@ -90,6 +90,14 @@ function getTransaction(id) {
   return getTransactions().find((t) => t.id === id) || null;
 }
 
+// Summary of the wedding ledger, for the savings-goal / margin features.
+export function getWeddingSummary() {
+  const txns = getTransactions();
+  const spent = sum(txns.filter((t) => t.type === 'expense'));
+  const saved = sum(txns.filter((t) => t.type === 'income'));
+  return { budget: getBudget(), spent, saved, pot: saved - spent };
+}
+
 // --- view state --------------------------------------------------------
 
 let editId = '';

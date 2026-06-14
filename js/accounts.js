@@ -8,7 +8,10 @@ import {
   addAccount,
   updateAccount,
   deleteAccount,
+  ACCOUNT_TYPES,
 } from './storage.js';
+
+const TYPE_LABELS = { current: 'Current', savings: 'Savings', credit_card: 'Credit card' };
 import { el, clear, formatCurrency, emitChange } from './utils.js';
 
 // Manager UI state (persists across dashboard re-renders).
@@ -92,6 +95,17 @@ export function renderAccountsCard() {
     }
   }
 
+  // Net worth = sum of all balances (positive and negative).
+  if (accounts.length > 1) {
+    const netWorth = accounts.reduce((s, a) => s + a.balance, 0);
+    card.appendChild(
+      el('div', { class: 'networth-row' }, [
+        el('span', { class: 'dim', text: 'Net worth' }),
+        el('span', { class: `num ${netWorth < 0 ? 'expense' : ''}`, style: 'font-weight:700', text: formatCurrency(netWorth) }),
+      ])
+    );
+  }
+
   if (panelOpen) {
     if (adding) {
       card.appendChild(accountForm(null));
@@ -117,13 +131,27 @@ export function renderAccountsCard() {
 function accountRow(a) {
   const negative = a.balance < 0;
   const meta = [];
-  if (a.overdraftLimit > 0) {
+  if (a.type && a.type !== 'current') meta.push(TYPE_LABELS[a.type] || a.type);
+  if (negative && a.overdraftLimit > 0) {
+    meta.push(`${formatCurrency(a.balance)} of ${formatCurrency(-a.overdraftLimit)} overdraft`);
+  } else if (a.overdraftLimit > 0) {
     meta.push(`${formatCurrency(a.available)} available`);
-    if (a.overdraftUsed > 0) meta.push(`${formatCurrency(a.overdraftUsed)} overdraft used`);
   }
+
+  // Within 10% of the overdraft limit (or already over it).
+  const nearLimit = a.overdraftLimit > 0 && a.available <= a.overdraftLimit * 0.1;
 
   const left = [el('div', { class: 'account-name', text: a.name })];
   if (meta.length) left.push(el('div', { class: 'account-meta dim', text: meta.join(' · ') }));
+  if (nearLimit) {
+    left.push(
+      el('div', {
+        class: 'account-meta',
+        style: 'color:var(--red);font-weight:600',
+        text: a.available <= 0 ? 'Overdraft limit reached' : 'Near overdraft limit',
+      })
+    );
+  }
 
   const right = [
     el('div', {
@@ -175,6 +203,11 @@ function accountForm(account) {
     placeholder: 'Current balance (e.g. 1200 or -50)',
     value: isEdit ? String(account.openingBalance) : '',
   });
+  const typeSelect = el('select', { class: 'select' }, ACCOUNT_TYPES.map((t) =>
+    el('option', { value: t, text: TYPE_LABELS[t] })
+  ));
+  typeSelect.value = isEdit ? account.type || 'current' : 'current';
+
   const overdraftInput = el('input', {
     type: 'text',
     inputmode: 'decimal',
@@ -190,10 +223,11 @@ function accountForm(account) {
     }
     const opening = parseSigned(openingInput.value);
     const overdraft = Math.max(0, parseSigned(overdraftInput.value));
+    const type = typeSelect.value;
     if (isEdit) {
-      updateAccount(account.id, { name, openingBalance: opening, overdraftLimit: overdraft });
+      updateAccount(account.id, { name, type, openingBalance: opening, overdraftLimit: overdraft });
     } else {
-      addAccount({ name, openingBalance: opening, overdraftLimit: overdraft });
+      addAccount({ name, type, openingBalance: opening, overdraftLimit: overdraft });
     }
     editingId = null;
     adding = false;
@@ -209,6 +243,8 @@ function accountForm(account) {
   return el('div', { class: 'account-form' }, [
     el('div', { class: 'account-form-hint dim', text: isEdit ? 'Edit account' : 'New account' }),
     nameInput,
+    el('label', { class: 'mini-label dim', text: 'Account type' }),
+    typeSelect,
     el('label', { class: 'mini-label dim', text: 'Current balance (the balance before any transactions you log here)' }),
     openingInput,
     el('label', { class: 'mini-label dim', text: 'Overdraft limit (0 if none)' }),

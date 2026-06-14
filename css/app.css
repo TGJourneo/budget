@@ -290,6 +290,99 @@ body {
   text-align: right;
 }
 
+/* net worth row */
+.networth-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px 2px;
+  margin-top: 2px;
+  border-top: 1px solid var(--border);
+}
+
+/* margin / unallocated */
+.margin-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 22px;
+}
+.margin-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+/* transaction badges */
+.tx-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.tx-badge.recurring {
+  background: rgba(88, 166, 255, 0.18);
+  color: var(--accent);
+}
+.tx-badge.anomaly {
+  background: var(--expense-bg);
+  color: var(--expense);
+}
+
+/* goals */
+.goal-row {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+/* insights */
+.insight-text {
+  margin: 4px 0 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+/* trends sparklines */
+.trend-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.trend-row:last-of-type {
+  border-bottom: none;
+}
+.trend-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.92rem;
+}
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 30px;
+}
+.spark-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+}
+
 /* scan / import from screenshot */
 .scan-cta {
   width: 100%;

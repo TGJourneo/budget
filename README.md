@@ -21,6 +21,24 @@ no accounts, no sync, no tracking, no build step, no dependencies.
 - **Per-category budgets** — cap spending per category (e.g. Food £400) on top
   of the overall monthly budget. The dashboard tracks each capped category's
   spend this month with amber/red warnings.
+- **Pattern recognition (offline, no cost)** — detects likely-recurring
+  transactions (badge in the list; "not logged yet this month" heads-up on the
+  dashboard), flags anomalies (a charge 2×+ the category average), shows a
+  6-month trend per category with biggest movers in the Summary, and a margin
+  finder ("£X unallocated this month" = budget − spent − goal earmarks) with a
+  simple cash-flow forecast of bills still to come.
+- **Account types & overdrafts** — each account is current / savings / credit
+  card, with an optional overdraft limit. Negative balances show in red ("−£120
+  of −£500 overdraft") with a near-limit warning, and a net-worth total sums all
+  accounts.
+- **Savings goals** — track a goal against a savings account or the wedding pot
+  (two separate pots), with a progress bar and an "on track for …" projection;
+  the monthly set-aside feeds the margin finder.
+- **AI insights (optional)** — an Insights card on Home with a manual "Get
+  insights" button (24h cooldown, cached result). Sends a small *summary* (never
+  raw transactions) to Claude — defaults to cheap Haiku — and writes a short
+  plain-English read on your month. Reuses the same on-device API key as
+  screenshot import.
 - **CSV export** — export all transactions to a CSV (Date, Description,
   Category, Type, Account, Amount) from the Transactions screen. Uses the iOS
   share sheet (save to Files, email, etc.) or a download on desktop. Handy for
@@ -94,6 +112,9 @@ Everything lives in your browser's `localStorage` under these keys:
 | `budget_recurring`     | array of recurring templates (freq, next date, etc.) |
 | `budget_category_limits` | `{ categoryName: monthlyLimit }`                   |
 | `budget_wedding_*`     | separate wedding ledger (budget, categories, items)  |
+| `budget_goals`         | savings goals (source, target, date, monthly)        |
+| `budget_claude_key`    | your Anthropic API key (insights + screenshot import) |
+| `budget_insight_text` / `_ts` | cached AI insight text + timestamp            |
 | `budget_categories`    | `{ expense: [...], income: [...] }`               |
 | `budget_monthly_limit` | total monthly budget (number as string)           |
 | `budget_settings`      | `{ currency, currencySymbol }`                     |
@@ -119,6 +140,9 @@ js/
   recurring.js    recurring payments card + manager
   wedding.js      self-contained wedding mini-budget (own ledger)
   import-scan.js  screenshot import via Claude vision (own API key)
+  patterns.js     offline pattern recognition (recurring/anomaly/trends/margin)
+  goals.js        savings goals (account or wedding pot) + projection
+  insights.js     Claude-powered insights card (summary payload, Haiku, cached)
   dashboard.js    home overview + live calculations
   summary.js      monthly breakdown, donut + bars, comparison
 icons/            app icons (192, 512, 180)

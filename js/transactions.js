@@ -16,6 +16,7 @@ import {
   categoryColor,
 } from './categories.js';
 import { populateAccountSelect } from './accounts.js';
+import { recurringIds, anomalyIds } from './patterns.js';
 import {
   $,
   el,
@@ -344,18 +345,26 @@ export function renderTransactionsView() {
     return;
   }
   const labelOf = accountLabeller();
-  for (const tx of rows) list.appendChild(txItem(tx, labelOf(tx)));
+  const recurring = recurringIds(all);
+  const anomalies = anomalyIds(all);
+  for (const tx of rows) {
+    list.appendChild(txItem(tx, labelOf(tx), { recurring: recurring.has(tx.id), anomaly: anomalies.has(tx.id) }));
+  }
 }
 
 // Shared row renderer (also used by the dashboard's recent list).
 // accountName is shown only when the user has more than one account.
-export function txItem(tx, accountName) {
+// flags: { recurring, anomaly } add small badges.
+export function txItem(tx, accountName, flags = {}) {
   let meta = `${formatDate(tx.date)} · ${tx.category}`;
   if (accountName) meta += ` · ${accountName}`;
+  const descChildren = [el('span', { text: tx.description || tx.category })];
+  if (flags.recurring) descChildren.push(el('span', { class: 'tx-badge recurring', title: 'Looks recurring', text: '↻' }));
+  if (flags.anomaly) descChildren.push(el('span', { class: 'tx-badge anomaly', title: 'Unusually large for this category', text: '!' }));
   return el('li', { class: 'tx-item', dataset: { id: tx.id } }, [
     el('span', { class: 'tx-cat-dot', style: `background:${categoryColor(tx.category)}` }),
     el('div', { class: 'tx-main' }, [
-      el('div', { class: 'tx-desc', text: tx.description || tx.category }),
+      el('div', { class: 'tx-desc' }, descChildren),
       el('div', { class: 'tx-meta', text: meta }),
     ]),
     el('div', {
