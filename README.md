@@ -25,6 +25,13 @@ no accounts, no sync, no tracking, no build step, no dependencies.
   Category, Type, Account, Amount) from the Transactions screen. Uses the iOS
   share sheet (save to Files, email, etc.) or a download on desktop. Handy for
   pasting into Claude for spending insights without any API key or cost.
+- **Scan a screenshot (optional, AI)** — from the Add screen, import transactions
+  from a bank-app screenshot. It uses Claude vision: you paste your **own**
+  Anthropic API key (stored only on your device), the image is sent to Anthropic,
+  Claude extracts the transactions, and you review/edit an editable list before
+  anything is saved. Online-only and costs a few pence per scan; everything else
+  in the app stays fully offline. Pick Opus (most accurate) / Sonnet / Haiku
+  (cheapest) per scan.
 - **Wedding tracker** — a fully separate mini-budget on its own tab, ring-fenced
   from day-to-day spending. Its own total budget, categories, costs and
   contributions, with budget progress, a "pot" balance (contributions − costs)
@@ -111,6 +118,7 @@ js/
   accounts.js     account picker + balance/accounts cards + manager
   recurring.js    recurring payments card + manager
   wedding.js      self-contained wedding mini-budget (own ledger)
+  import-scan.js  screenshot import via Claude vision (own API key)
   dashboard.js    home overview + live calculations
   summary.js      monthly breakdown, donut + bars, comparison
 icons/            app icons (192, 512, 180)

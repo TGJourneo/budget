@@ -290,6 +290,64 @@ body {
   text-align: right;
 }
 
+/* scan / import from screenshot */
+.scan-cta {
+  width: 100%;
+  min-height: var(--tap);
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.scan-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.scan-item.excluded {
+  opacity: 0.5;
+}
+.scan-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scan-item-head input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+.scan-item-head input[inputmode="decimal"] {
+  width: 90px;
+  flex: none;
+  text-align: right;
+}
+.scan-check {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  justify-content: center;
+}
+.scan-check input {
+  width: 22px;
+  height: 22px;
+}
+.scan-item-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.scan-item-grid input[type="date"] {
+  grid-column: 1 / -1;
+}
+
 /* wedding form: category select + "new" button */
 .cat-with-add {
   display: flex;

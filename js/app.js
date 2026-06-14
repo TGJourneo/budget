@@ -10,6 +10,7 @@ import {
 import { initDashboard, renderDashboard } from './dashboard.js';
 import { initSummary, renderSummary } from './summary.js';
 import { renderWedding } from './wedding.js';
+import { initScan, renderScan, resetScan } from './import-scan.js';
 import { migrateData, generateDueTransactions } from './storage.js';
 import { $, $$, toast } from './utils.js';
 
@@ -21,6 +22,7 @@ const VIEWS = {
   transactions: { el: '#view-transactions', render: renderTransactionsView },
   summary: { el: '#view-summary', render: renderSummary },
   wedding: { el: '#view-wedding', render: renderWedding },
+  scan: { el: '#view-scan', render: renderScan },
 };
 
 // Switch to a view. opts.editId (for "add") loads a transaction to edit.
@@ -45,6 +47,9 @@ function navigate(view, opts = {}) {
     else resetAddForm();
     // Focus after the view is visible so iOS opens the keyboard.
     requestAnimationFrame(focusAmount);
+  } else if (view === 'scan') {
+    if (!opts.keepState) resetScan();
+    renderScan();
   } else if (VIEWS[view].render) {
     VIEWS[view].render();
   }
@@ -81,6 +86,9 @@ function init() {
   initDashboard({ navigate });
   initSummary({ navigate });
   initTransactions({ navigate });
+  initScan({ navigate });
+  const scanBtn = $('#scan-btn');
+  if (scanBtn) scanBtn.addEventListener('click', () => navigate('scan'));
   wireNav();
   wireLiveUpdates();
   registerServiceWorker();
